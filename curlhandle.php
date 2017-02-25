@@ -1,5 +1,7 @@
 <?php
 
+namespace MultiCurl\CurlHandle;
+
 /**
  *  A single curl handle.
  */
@@ -9,12 +11,31 @@ class CurlHandle {
   // We use this to identify the handle during the
   // MultiCurl process.
   private $id = null;
+  private $idsep = ']MULTICURL]';
 
   /**
    *  Return the id of this handle.
    */
-  public function getId(){
+  public function id(){
     return $this->id;
+  }
+
+  /**
+   *  Get id out of curlopt_private.
+   */
+  private function getId($ch){
+    $private = curl_getinfo($ch, CURLINFO_PRIVATE);
+    $id_loc = strpos($private, $this->idsep);
+    return susbtr($private, 0, $id_loc);
+  }
+
+  /**
+   * Get the private value independent of the ID.
+   */
+  private function getPrivate($ch){
+    $private = curl_getinfo($ch, CURLINFO_PRIVATE);
+    $id_loc = strpos($private, $this->idsep);
+    return substr($private, ($id_loc + strlen($this->idsep)));
   }
 
   // The curl handle itself.
@@ -24,7 +45,7 @@ class CurlHandle {
    *  Return the raw curl handle.
    *  @return curl object
    */
-  public function getHandle(){
+  public function handle(){
     return $this->ch;
   }
 
@@ -42,13 +63,14 @@ class CurlHandle {
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $url);
     $this->id = $id;
-    curl_setopt($ch, CURLOPT_PRIVATE, $id);
     foreach($curl_opts as $co=>$curl_opt){
       switch($co){
-        case 'CURLOPT_PRIVATE':
-          // Not setting this because that's what id is for.
+        case CURLOPT_PRIVATE:
+          // We need to set ID]], followed by the actual value.
+          $private = $this->id . $this->idsep . $curl_opt;
+          curl_setopt($ch, CURLOPT_PRIVATE, $private);
           break;
-        case 'CURLOPT_URL':
+        case CURLOPT_URL:
           // Use $url to set this.
           break;
         default:
