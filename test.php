@@ -7,6 +7,7 @@
 use MultiCurl\MultiCurl as MultiCurl;
 use MultiCurl\Curl\CurlHandle as CurlHandle;
 use MultiCurl\Requests\Request as Request;
+use MultiCurl\Curl\CurlRequest as CurlRequest;
 
 require_once('app/start.php');
 
@@ -18,6 +19,13 @@ function goEcho($val){
 }
 
 goEcho("I have loaded.");
-$mc = new MultiCurl();
-$ch = new CurlHandle();
-$req = new Request();
+//$mc = new MultiCurl();
+//$ch = new CurlHandle();
+$init = [
+  'headers' => ['test1' => 'test2'],
+  'url' => 'barf',
+  'fake' => 'phony'
+];
+$req = new CurlRequest($init);
+goEcho($req->url);
+goEcho($req);

@@ -3,9 +3,7 @@
 namespace MultiCurl\Requests;
 
 class Request {
-  private $url = null;
-  private $headers = null;
-  private $curl_opts = null;
+  protected $headers = null;
 
   public function __construct(){
     $arguments = func_get_args();
@@ -16,6 +14,9 @@ class Request {
 
   public function __set($key, $val=null){
     if(is_array($key)){
+      // If this was passed in as an array, it's part of func_get_args,
+      // so we need to extract the actual array from the arguments array.
+      $key = $key[0];
       foreach($key as $k=>$kv){
         if(is_numeric($k)){
           $kk = array_keys(get_object_vars($this))[$k];
@@ -82,6 +83,10 @@ class Request {
    */
   public function removeHeader($key){
     unset($this->header[$key]);
+  }
+
+  public function __toString(){
+    return print_r($this->__get(), true);
   }
 
   public function __destruct(){
