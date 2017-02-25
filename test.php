@@ -28,4 +28,5 @@ $init = [
 ];
 $req = new CurlRequest($init);
 goEcho($req->url);
+goEcho($req->headers);
 goEcho($req);
