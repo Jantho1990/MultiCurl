@@ -1,6 +1,6 @@
 <?php
 
-namespace MultiCurl\CurlHandle;
+namespace MultiCurl\Curl;
 
 /**
  *  A single curl handle.

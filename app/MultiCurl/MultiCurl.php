@@ -2,7 +2,9 @@
 
 namespace MultiCurl;
 
-use MultiCurl\CurlHandle as CurlHandle;
+// use MultiCurl\CurlHandle as CurlHandle;
+// use MultiCurl\CurlRequest as Request;
+// use MultiCurl\CurlResponse as Response;
 
 /**
  *  A curl wrapper class that features curl_multi.
@@ -65,7 +67,7 @@ class MultiCurl {
     }
 
     // Loop through urls and create curl handles.
-    foreach($handles as)
+    //foreach($handles as)
 
   }
 
