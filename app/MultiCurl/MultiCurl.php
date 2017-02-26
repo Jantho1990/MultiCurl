@@ -29,11 +29,13 @@ class MultiCurl {
     $this->setConfigOptions($config);
 
     // Create the curl_multi handle.
-    $mh = $this->mh;
-    $mh = \curl_multi_init();
+    $this->mh = \curl_multi_init();
 
     // Create curl handles for each request.
     $this->createCurlHandles($this->requests);
+
+    // Add the created curl handles to the multi object.
+    $this->addCurlMultiHandles($this->handles);
 
   }
 
@@ -76,7 +78,8 @@ class MultiCurl {
   private function createCurlHandles($requests){
     if(is_array($requests)){
       foreach($requests as $r=>$request){
-        $this->createCurlHandle($request);
+        $curlHandle = $this->createCurlHandle($request);
+        $this->handles[count($this->handles)] = $curlHandle;
       }
     }
   }
@@ -85,13 +88,13 @@ class MultiCurl {
    *  Create a CurlHandle from a CurlRequest object.
    */
   private function createCurlHandle($request){
-    $curlRequest = new CurlHandle($request, $this->hid++);
+    return new CurlHandle($request, $this->hid++);
   }
 
   /**
    *  Build curl_multi handles.
    */
-  public function addCurlMultiHandles($handles=null){
+  public function addCurlMultiHandles($handles = null){
     // Validate data.
     if($handles === null){
       trigger_error('No handles passed in.');
@@ -99,15 +102,27 @@ class MultiCurl {
     }
 
     // Loop through urls and create curl handles.
-    //foreach($handles as)
+    foreach($handles as $handle){
+      curl_multi_add_handle($this->mh, $handle->handle());
+    }
 
   }
 
   /**
-   *  Execute a query.
+   *  Execute handles.
    */
   public function execute(){
+    do {
+      $mrc = curl_multi_exec($this->mh, $active);
+    } while($mrc == CURLM_CALL_MULTI_PERFORM);
+  }
 
+  public function __destruct(){
+    foreach($this->handles as $h => $handle){
+      curl_multi_remove_handle($this->mh, $handle->handle());
+      unset($this->handles[$h]);
+    }
+    curl_multi_close($this->mh);
   }
 
 }
