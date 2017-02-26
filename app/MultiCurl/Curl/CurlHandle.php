@@ -49,7 +49,7 @@ class CurlHandle {
     return $this->ch;
   }
 
-  public function __construct($url, $curl_opts, $id){
+  public function __construct($request, $id){
     // Validate arguments.
     $args = func_get_args();
     foreach($args as $arg){
@@ -59,22 +59,21 @@ class CurlHandle {
     }
 
     // Create the curl handle.
-    $ch = $this->ch;
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, $url);
-    $this->id = $id;
-    foreach($curl_opts as $co=>$curl_opt){
+    $this->ch = curl_init();
+    curl_setopt($this->ch, CURLOPT_URL, $request->url);
+    curl_setopt($this->ch, CURLOPT_PRIVATE, $this->id . $this->idsep);
+    foreach($request->curl_opts as $co=>$curl_opt){
       switch($co){
         case CURLOPT_PRIVATE:
           // We need to set ID]], followed by the actual value.
           $private = $this->id . $this->idsep . $curl_opt;
-          curl_setopt($ch, CURLOPT_PRIVATE, $private);
+          curl_setopt($this->ch, CURLOPT_PRIVATE, $private);
           break;
         case CURLOPT_URL:
           // Use $url to set this.
           break;
         default:
-          curl_setopt($ch, $co, $curl_opt);
+          curl_setopt($this->ch, $co, $curl_opt);
       }
     }
     return $this;

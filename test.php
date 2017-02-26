@@ -24,9 +24,12 @@ goEcho("I have loaded.");
 $init = [
   'headers' => ['test1' => 'test2'],
   'url' => 'barf',
-  'fake' => 'phony'
+  'curl_opts' => [
+    CURLOPT_HEADER => 0
+  ]
 ];
 $req = new CurlRequest($init);
-goEcho($req->url);
-goEcho($req->headers);
-goEcho($req);
+//goEcho($req->url);
+//goEcho($req->headers);
+//goEcho($req);
+$mc = new MultiCurl($req);
