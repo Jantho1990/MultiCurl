@@ -16,6 +16,7 @@ class MultiCurl {
   private $handles = [];
   private $hid = 0; // Counter for handle private IDs.
   private $requests = [];
+  private $responses = [];
   private $config = [];
   private $mh = null;
 
@@ -122,8 +123,38 @@ class MultiCurl {
       curl_multi_select($this->mh);
     }while($active > 0);
 
+    $this->createCurlResponses();
+
     // TODO: add curl_multi_info_read.
 
+  }
+
+  /**
+   *  Create CurlResponse objects from the handle results.
+   */
+  private function createCurlResponses(){
+    foreach($this->handles as $handle){
+      $curlResponse = $this->createCurlResponse($handle);
+      $this->responses[count($this->responses)] = $curlResponse;
+    }
+  }
+
+  /**
+   *  Create a CurlResponse object.
+   */
+  private function createCurlResponse(CurlHandle $handle){
+    $curlResponse = new CurlResponse([
+      'content' => curl_multi_getcontent($handle->handle()),
+      'statusCode' => curl_getinfo($handle->handle(), CURLINFO_HTTP_CODE)
+    ]);
+    return $curlResponse;
+  }
+
+  /**
+   *  Get responses.
+   */
+  public function getResponses(){
+    return $this->responses;
   }
 
   /**

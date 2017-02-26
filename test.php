@@ -35,4 +35,5 @@ $req = new CurlRequest($init);
 //goEcho($req);
 $mc = new MultiCurl($req);
 $mc->execute();
-var_dump($mc->getContentFromHandles());
+//var_dump($mc->getContentFromHandles());
+var_dump($mc->getResponses());
