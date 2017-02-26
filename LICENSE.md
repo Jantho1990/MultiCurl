@@ -1,0 +1,1 @@
+Currently, I still retain all rights to this library. Once it is fully functional, I intend to open-source it, but until then I don't feel like making this public domain and I don't feel like researching which open-source license is the best fit (I want to make sure I can use this for work or personal projects).
