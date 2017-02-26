@@ -1,5 +1,5 @@
 # MultiCurl
-This is a curl class which makes extensive use of
+This is a curl library which makes extensive use of
 curl_multi functionality.
 
 ## Why do this?
@@ -13,4 +13,6 @@ executing before processing the results, considerable time may be saved in
 cases of very large numbers of queries.
 
 `Currently, this is very much a work in progress and should
-not be used in any project.`
+not be used in any project. However, if you wish to test the
+current progress, feel free to run the test.php file. Usually this
+file should run.`
