@@ -62,12 +62,16 @@ class CurlHandle {
     $this->ch = curl_init();
     curl_setopt($this->ch, CURLOPT_URL, $request->url);
     curl_setopt($this->ch, CURLOPT_PRIVATE, $this->id . $this->idsep);
+    curl_setopt($this->ch, CURLOPT_HEADER, 1);
     foreach($request->curl_opts as $co=>$curl_opt){
       switch($co){
         case CURLOPT_PRIVATE:
           // We need to set ID]], followed by the actual value.
           $private = $this->id . $this->idsep . $curl_opt;
           curl_setopt($this->ch, CURLOPT_PRIVATE, $private);
+          break;
+        case CURLOPT_HEADER:
+          // We will be handling headers ourselves.
           break;
         case CURLOPT_URL:
           // Use $url to set this.

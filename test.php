@@ -42,10 +42,12 @@ $req2 = new CurlRequest($init2);
 //goEcho($req->url);
 //goEcho($req->headers);
 //goEcho($req);
-$mc = new MultiCurl($req);
+$mc = new MultiCurl($req, [
+  'return_headers_as_array' => 1
+]);
 $mc->execute();
 //var_dump($mc->getContentFromHandles());
 var_dump($mc->getResponses());
-$mc2 = new MultiCurl([$req, $req2]);
-$mc2->execute();
-var_dump($mc2->getResponses());
+//$mc2 = new MultiCurl([$req, $req2]);
+//$mc2->execute();
+//var_dump($mc2->getResponses());

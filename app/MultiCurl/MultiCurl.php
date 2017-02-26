@@ -65,11 +65,14 @@ class MultiCurl {
   /**
    *  Set configuration options.
    */
-  private function setConfigOptions(){
+  private function setConfigOptions($config){
     $master_config = [
-
+      'return_headers_as_array' => 0
     ];
-
+    $this->config = $master_config;
+    foreach($config as $c=>$conf){
+      $this->config[$c] = $conf;
+    }
   }
 
   /**
@@ -142,9 +145,11 @@ class MultiCurl {
    *  Create a CurlResponse object.
    */
   private function createCurlResponse(CurlHandle $handle){
+    $responseData = $this->processContent($handle);
     $curlResponse = new CurlResponse([
-      'content' => curl_multi_getcontent($handle->handle()),
-      'statusCode' => curl_getinfo($handle->handle(), CURLINFO_HTTP_CODE)
+      'content' => $responseData['content'],
+      'statusCode' => curl_getinfo($handle->handle(), CURLINFO_HTTP_CODE),
+      'headers' => $responseData['headers']
     ]);
     return $curlResponse;
   }
@@ -154,6 +159,26 @@ class MultiCurl {
    */
   public function getResponses(){
     return $this->responses;
+  }
+
+  /**
+   *  Extract the response header and return an array with
+   *  header and content strings.
+   *  @param $handle A curl handle.
+   *  @return array
+   */
+  public function processContent($handle){
+    $hs = curl_getinfo($handle->handle(), CURLINFO_HEADER_SIZE);
+    $content = curl_multi_getcontent($handle->handle());
+    $headers = substr($content, 0, $hs);
+    if($this->config['return_headers_as_array'] === 1){
+      echo "This will cause return headers to be returned as an array. But not today. :P\n";
+    }
+    $content = substr($content, $hs);
+    return [
+      'headers' => $headers,
+      'content' => $content
+    ];
   }
 
   /**
