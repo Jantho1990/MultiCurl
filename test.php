@@ -23,9 +23,10 @@ goEcho("I have loaded.");
 //$ch = new CurlHandle();
 $init = [
   'headers' => ['test1' => 'test2'],
-  'url' => 'barf',
+  'url' => 'http://www.doihaveinternet.com/',
   'curl_opts' => [
-    CURLOPT_HEADER => 0
+    CURLOPT_HEADER => 0,
+    CURLOPT_RETURNTRANSFER => 1
   ]
 ];
 $req = new CurlRequest($init);
@@ -33,3 +34,5 @@ $req = new CurlRequest($init);
 //goEcho($req->headers);
 //goEcho($req);
 $mc = new MultiCurl($req);
+$mc->execute();
+var_dump($mc->getContentFromHandles());

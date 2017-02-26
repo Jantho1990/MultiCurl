@@ -112,9 +112,30 @@ class MultiCurl {
    *  Execute handles.
    */
   public function execute(){
-    do {
+    // For now this will just run typical curl_multi action.
+    // Pretty boring stuff, I know.
+    // Soon we will remove this and add the ability to
+    // read data while executing.
+    $active = null;
+    do{
       $mrc = curl_multi_exec($this->mh, $active);
-    } while($mrc == CURLM_CALL_MULTI_PERFORM);
+      curl_multi_select($this->mh);
+    }while($active > 0);
+
+    // TODO: add curl_multi_info_read.
+
+  }
+
+  /**
+   *  Get content from completed curl handles.
+   *  This is mostly useful to make sure execution succeeded.
+   */
+  public function getContentFromHandles(){
+    $ret = [];
+    foreach($this->handles as $handle){
+      array_push($ret, curl_multi_getcontent($handle->handle()));
+    }
+    return $ret;
   }
 
   public function __destruct(){
