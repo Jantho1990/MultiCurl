@@ -29,7 +29,16 @@ $init = [
     CURLOPT_RETURNTRANSFER => 1
   ]
 ];
+$init2 = [
+  'headers' => ['test1' => 'test2'],
+  'url' => 'https://developer.mozilla.org/en-US/',
+  'curl_opts' => [
+    CURLOPT_HEADER => 0,
+    CURLOPT_RETURNTRANSFER => 1
+  ]
+];
 $req = new CurlRequest($init);
+$req2 = new CurlRequest($init2);
 //goEcho($req->url);
 //goEcho($req->headers);
 //goEcho($req);
@@ -37,3 +46,6 @@ $mc = new MultiCurl($req);
 $mc->execute();
 //var_dump($mc->getContentFromHandles());
 var_dump($mc->getResponses());
+$mc2 = new MultiCurl([$req, $req2]);
+$mc2->execute();
+var_dump($mc2->getResponses());

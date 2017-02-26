@@ -45,10 +45,9 @@ class MultiCurl {
    *  @param $requests A CurlRequest or array of CurlRequest objects.
    */
   private function setRequests($requests){
-    $r = 0;
     if(is_array($requests)){
       foreach($requests as $request){
-        $this->$requests[$r++] = $request;
+        $this->requests[count($this->requests)] = $request;
       }
     }else{
       $this->requests[count($this->requests)] = $requests;
