@@ -49,7 +49,13 @@ class CurlHandle {
     return $this->ch;
   }
 
-  public function __construct($request, $id){
+  /**
+   *  @param $request A CurlRequest object.
+   *  @param $id A unique ID value.
+   *  @param $idsep Overrides the default value of $idsep.
+   *  @return CurlHandle object.
+   */
+  public function __construct($request, $id, $idsep){
     // Validate arguments.
     $args = func_get_args();
     foreach($args as $arg){

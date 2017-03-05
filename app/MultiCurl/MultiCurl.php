@@ -5,6 +5,7 @@ namespace MultiCurl;
 use MultiCurl\Curl\CurlHandle as CurlHandle;
 use MultiCurl\Curl\CurlRequest as CurlRequest;
 use MultiCurl\Curl\CurlResponse as CurlResponse;
+use MultiCurl\ResponsesHandler as ResponsesHandler;
 
 /**
  *  A curl wrapper class that features curl_multi.
@@ -19,6 +20,7 @@ class MultiCurl {
   private $responses = [];
   private $config = [];
   private $mh = null;
+  private $ResponsesHandler = null;
 
   public function __construct($requests, $config=null){
     // Validate data.
@@ -35,8 +37,14 @@ class MultiCurl {
     // Create curl handles for each request.
     $this->createCurlHandles($this->requests);
 
+    // Set the responses handler.
+    $this->ResponsesHandler = new ResponsesHandler;
+
     // Add the created curl handles to the multi object.
-    $this->addCurlMultiHandles($this->handles);
+    //$this->addCurlMultiHandles($this->handles);
+    // Taking this out so we can precisely control when we
+    // add handles (this will allow batch_limit to be
+    // enforced).
 
   }
 
@@ -63,11 +71,16 @@ class MultiCurl {
   }
 
   /**
-   *  Set configuration options.
+   *  Set configuration options. Options are as follows:
+   *  @param return_headers_as_array Header values are converted to an array.
+   *  @param idsep Sets the id separator value.
+   *  @param batch_limit The maximum number of requests to process at once.
    */
   private function setConfigOptions($config){
     $master_config = [
-      'return_headers_as_array' => 0
+      'return_headers_as_array' => 0,
+      'idsep' => ']MULTICURL]',
+      'batch_limit' => 10
     ];
     $this->config = $master_config;
     foreach($config as $c=>$conf){
@@ -78,11 +91,15 @@ class MultiCurl {
   /**
    *  Create curl handles for requests.
    */
-  private function createCurlHandles($requests){
+  public function createCurlHandles($requests){
     if(is_array($requests)){
       foreach($requests as $r=>$request){
-        $curlHandle = $this->createCurlHandle($request);
-        $this->handles[count($this->handles)] = $curlHandle;
+        $curlHandle = $this->createCurlHandle(
+          $request,
+          $this->hid,
+          $this->config['idsep']
+        );
+        $this->handles[$this->hid++] = $curlHandle;
       }
     }
   }
@@ -90,44 +107,102 @@ class MultiCurl {
   /**
    *  Create a CurlHandle from a CurlRequest object.
    */
-  private function createCurlHandle($request){
-    return new CurlHandle($request, $this->hid++);
-  }
-
-  /**
-   *  Build curl_multi handles.
-   */
-  public function addCurlMultiHandles($handles = null){
-    // Validate data.
-    if($handles === null){
-      trigger_error('No handles passed in.');
-      return false;
-    }
-
-    // Loop through urls and create curl handles.
-    foreach($handles as $handle){
-      curl_multi_add_handle($this->mh, $handle->handle());
-    }
-
+  public function createCurlHandle($request, $id, $idsep){
+    return new CurlHandle($request, $id, $idsep);
   }
 
   /**
    *  Execute handles.
    */
   public function execute(){
-    // For now this will just run typical curl_multi action.
-    // Pretty boring stuff, I know.
-    // Soon we will remove this and add the ability to
-    // read data while executing.
+    // Parts of this method inspired by:
+    // www.onlineaspect.com/2009/01/26/how-to-use-curl_multi-without-blocking/
+
+    // Add the inital batch of handles, respecting batch_limit.
+    for($i = 0; $i < $this->config['batch_limit']; $i++){
+      $handle = $this->handles[$i];
+      curl_multi_add_handle($this->mh, $handle->handle());
+    }
+
+    // Process the requests.
     $active = null;
     do{
-      $mrc = curl_multi_exec($this->mh, $active);
-      curl_multi_select($this->mh);
-    }while($active > 0);
+      $mrc = curl_multi_exec($this->mh, $running);
+      if($mrc != CURLM_OK){break;}
 
-    $this->createCurlResponses();
+      // Request finished -- Send to the process handler.
+      while($done = curl_multi_info_read($mh)){
+        // Process the result and take care of creating
+        // any necessary CurlResponse objects.
+        // $result will tell MultiCurl what actions to
+        // take after the response is processed.
+        $result = $this->ResponsesHandler
+          ->processResponse($handle, $this);
+        // Figure out what to do based on the value of
+        // $result.
+        switch($result){
+          case 'success':
+            // Remove handle from the queue and add a
+            // new handle to the queue.
+
+            break;
+          case 'redirect':
+            // Add the handle back to the queue. Based on
+            // config, determine if it should be added back
+            // now or at the end of the queue.
+
+            break;
+          case 'error':
+            // Something went wrong, remove handle from the
+            // queue.
+
+            break;
+          case 'retry':
+            // Handle 429s and other requests that are not
+            // redirects, but that should be added back to
+            // the queue.
+
+            break;
+          case 'continue':
+            // This will handle Code 100 requests.
+
+            break;
+          default:
+            // ...whoops.
+            trigger_error("Unexpected result: $result");
+        }
+
+      }
+    }while($running);
+
+    //$this->createCurlResponses();
 
     // TODO: add curl_multi_info_read.
+
+  }
+
+  /**
+   *  Get id out of curlopt_private.
+   */
+  private function getHandleId($mh_handle){
+    $private = curl_getinfo($mh_handle, CURLINFO_PRIVATE);
+    $id_loc = strpos($private, $this->config['idsep']);
+    return susbtr($private, 0, $id_loc);
+  }
+
+  /**
+   *  Returns the appropriate CurlHandle object based on
+   *  the stored private value in $mh_handle.
+   */
+  private function getCurlHandleObject($mh_handle){
+    $id = $this->getHandleId($mh_handle);
+    return $this->handles[$id];
+  }
+
+  /**
+   *  Success Handler.
+   */
+  private function successHandler($handle){
 
   }
 
